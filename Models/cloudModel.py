@@ -1,4 +1,5 @@
 from db import db
+from Models.IdentityModel import IdentityModel
 
 class CloudModel(db.Model):
     __tablename__ = 'cloud'
@@ -6,9 +7,9 @@ class CloudModel(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     file_id = db.Column(db.String(100), db.ForeignKey('files.id'))
+    owner_id = db.Column(db.Integer,db.ForeignKey('identity.id'),default=None)
     filename = db.Column(db.String(80))
     roll = db.Column(db.String(10))
-    owner_id = db.Column(db.Integer, default=None)
 
     def __init__(self, user_id, file_id, filename, roll, owner_id=None):
         self.user_id = user_id
@@ -42,14 +43,49 @@ class CloudModel(db.Model):
     @classmethod
     def find_by_fileName(cls, name):
         return cls.query.filter_by(filename=name).first()
+    
+    @classmethod
+    def find_owner(cls, userId,fileName):
+        return cls.query.filter_by(filename=fileName,user_id=userId,owner_id=None).first()
+
+    
+    @classmethod
+    def find_friend(cls, owner_id_,fileName,userID):
+        return cls.query.filter_by(filename=fileName,user_id=userID,owner_id=IdentityModel(owner_id_,fileName).id).first()
+    
 
     @classmethod
     def createFriends(cls, owner_id, cloud_data, friends):
         for i in friends:
             CloudModel(i, cloud_data.file_id, cloud_data.filename, "friends",
-                       owner_id).save_to_db()
+                       IdentityModel(owner_id, cloud_data.filename).id).save_to_db()
+
+    @classmethod
+    def removeFriends(cls, owner_id_, cloud_data, friends_ids):
+        for i in friends_ids:
+            cls.query.filter_by(filename=cloud_data.filename,user_id=i,owner_id= IdentityModel(owner_id_,cloud_data.filename).id).delete()
+            db.session.commit()
+
+    @classmethod
+    def updatePower(cls,owner_id_, cloud_data, friends_id):
+
+
+       owner_data = cls.find_owner(owner_id_,cloud_data.filename)
+
+       identityOwnerData = IdentityModel(owner_id_,cloud_data.filename)
+
+       friend_data = cls.find_friend(owner_id_,cloud_data.filename,friends_id)
+
+       owner_data.owner_id=identityOwnerData.id
+       owner_data.roll="friends"
+       friend_data.owner_id=None
+       identityOwnerData.owner_id=friends_id
+       friend_data.roll="Owner"
+       db.session.commit()
+
 
     
     @classmethod
     def find_all_users(cls,id,file_name):
-        return cls.query.filter_by(filename=file_name,owner_id=id).all()
+
+        return cls.query.filter_by(filename=file_name,owner_id=IdentityModel(id,file_name).id).all()
