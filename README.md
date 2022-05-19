@@ -6,6 +6,9 @@ We use SHA256 to compare files with other file if file already exists with don't
 
 <p align="center">
 Here our Database Schema design
+ </p>
+<p align="center">
+
   <img width="250" height="auto" src="https://firebasestorage.googleapis.com/v0/b/db-tester-f302d.appspot.com/o/download.png?alt=media&token=b0f88a5f-a8d9-4879-90c5-829a81416351">
 </p>
 
