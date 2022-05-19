@@ -30,5 +30,5 @@ class FileModel(db.Model):
         db.session.commit()
 
     @classmethod
-    def find_by_id(cls, _id):
+    def getHash(cls, _id):
         return cls.query.filter_by(id=_id).first()

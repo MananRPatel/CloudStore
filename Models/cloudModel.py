@@ -19,8 +19,7 @@ class CloudModel(db.Model):
     def json(self):
         return {
             'filename': self.filename,
-            'roll': self.roll,
-            'email':self.cloudier.password
+            'roll': self.roll
         }
 
     def save_to_db(self):
@@ -34,5 +33,9 @@ class CloudModel(db.Model):
     @classmethod
     def find_by_id(cls, _id):
         return cls.query.filter_by(id=_id).first()
+    
+    @classmethod
+    def find_by_user_id(cls, _id):
+        return cls.query.filter_by(user_id=_id)
 
     
