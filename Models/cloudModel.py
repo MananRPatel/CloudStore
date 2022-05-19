@@ -42,10 +42,6 @@ class CloudModel(db.Model):
         return cls.query.filter_by(user_id=_id)
 
     @classmethod
-    def find_by_user_id_owner(cls, _id):
-        return cls.query.filter_by(user_id=_id,roll="Owner").first()
-
-    @classmethod
     def find_by_fileName(cls, name):
         return cls.query.filter_by(filename=name).first()
     
@@ -53,11 +49,6 @@ class CloudModel(db.Model):
     def find_owner(cls, userId,fileName):
         return cls.query.filter_by(filename=fileName,user_id=userId,owner_id=None).first()
 
-    
-    @classmethod
-    def find_friend(cls, owner_id_,fileName,userID):
-        return cls.query.filter_by(filename=fileName,user_id=userID,owner_id=IdentityModel.get_id(owner_id_,fileName).id).first()
-    
 
     @classmethod
     def createFriends(cls, owner_id, cloud_data, friends):
@@ -87,26 +78,29 @@ class CloudModel(db.Model):
        friend_data.owner_id=None
        identityOwnerData.owner_id=friends_id
        friend_data.roll="Owner"
+
        db.session.commit()
 
     @classmethod
     def deleteFile(cls,id_,filename_):
-        print(f"\n\n\n\n\n{id_}\n\n\n\n\n")
-        cloudData = cls.find_by_user_id_owner(id_)
+
+        cloudData = cls.find_owner(id_,filename_)
 
         if cloudData is None:return False
 
+
         realFileName = cloudData.file_id
-        print("\n\n\n\n\n")
-        print(realFileName,cloudData.file_id,cloudData.user_id,cloudData.roll,sep="                 ") 
-        print("\n\n\n\n\n\n")
-       
         IdentityModel.get_id(id_,filename_).delete_from_db()
         cloudData.delete_from_db()
         os.remove(f"DataBlock\\{realFileName}")
         return True
     
+    #for retrieve single user
+    @classmethod
+    def find_friend(cls, owner_id_,fileName,userID):
+        return cls.query.filter_by(filename=fileName,user_id=userID,owner_id=IdentityModel.get_id(owner_id_,fileName).id).first()
+    
+    #for all friends
     @classmethod
     def find_all_users(cls,id,file_name):
-
         return cls.query.filter_by(filename=file_name,owner_id=IdentityModel.get_id(id,file_name).id).all()
