@@ -7,7 +7,9 @@ class IdentityModel(db.Model):
     owner_id = db.Column(db.Integer)
     filename = db.Column(db.String(80))
 
-    permissions = db.relationship('CloudModel',backref='permits',cascade="save-update")
+    permissions = db.relationship('CloudModel',backref='permits',
+        cascade="all, delete",
+        passive_deletes=True)
 
     def __init__(self,id,filename):
         self.owner_id = id

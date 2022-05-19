@@ -1,6 +1,7 @@
 from flask_restful import Resource, reqparse
 from Models.CloudModel import CloudModel
 from Models.FileModel import FileModel
+from Models.IdentityModel import IdentityModel
 from flask import request, send_file
 import hashlib
 import os
@@ -22,7 +23,7 @@ class Cloud_myDrive(Resource):
         if fileName == None: return {"Error": "No file name provided"}, 404
         fileData = request.files.get("file", "")
         if fileData == None: return {"Error": "No file uploaded"}, 404
-
+        filesize = fileData.content_length
         fileData.save(f"Temp\\{user_id}{fileName}")
 
         openedFile = open(f"Temp\\{user_id}{fileName}", "rb")
@@ -43,11 +44,28 @@ class Cloud_myDrive(Resource):
         else:
             shutil.move(f"Temp\\{user_id}{fileName}",
                         f"DataBlock\\{sha256Hashed}")
-            fileStorage = FileModel(sha256Hashed, fileName, 1000)
+            fileStorage = FileModel(sha256Hashed, filesize)
             fileStorage.save_to_db()
+            IdentityModel(user_id, fileName).save_to_db()
             cloud = CloudModel(user_id, fileStorage.id, fileName, "Owner")
         cloud.save_to_db()
         return cloud.json()
+
+    @classmethod
+    def delete(cls, info):
+        id = info
+
+        _user_parser = reqparse.RequestParser()
+        _user_parser.add_argument('filename',
+                                  type=str,
+                                  required=True,
+                                  help="please add your file name")
+
+        data = _user_parser.parse_args()
+
+        if CloudModel.deleteFile(id, data['filename']):
+            return {"Success": True}
+        return {"Error": "Delete on file don't work"}, 404
 
 
 _user_parser = reqparse.RequestParser()
@@ -79,20 +97,29 @@ class CloudPermission(Resource):
         CloudModel.createFriends(id, cloud_data, data['friends'])
         return {"Message": "Shared file to all friends"}, 201
 
+    @classmethod
+    def delete(cls, id):
+        data = _user_parser.parse_args()
+        cloud_data = CloudModel.find_by_fileName(data['filename'])
+        if cloud_data is None: return {"Error": "File does not exists"}, 404
+        CloudModel.removeFriends(id, cloud_data, data['friends'])
+        return {"Message": f"Remove Friends {data['filename']}"}, 200
+
+    @classmethod
+    def put(cls, id):
+        data = _user_parser.parse_args()
+        cloud_data = CloudModel.find_by_fileName(data['filename'])
+        print(data['friends'][0], cloud_data)
+        if cloud_data is None: return {"Error": "File does not exists"}, 404
+        CloudModel.updatePower(id, cloud_data, data['friends'][0])
+        return {"Message": "Power changed"}, 200
+
 
 class CloudShare(Resource):
 
     @classmethod
     def get(cls, id, filename):
         return {
-            "FileName":
+            "File":
             [i.share_json() for i in CloudModel.find_all_users(id, filename)]
         }
-
-    # @classmethod
-    # def post(cls, id,filename):
-    #     data = _user_parser.parse_args()
-    #     cloud_data = CloudModel.find_by_fileName(data['filename'])
-    #     if cloud_data is None: return {"Error": "File does not exists"}, 404
-    #     CloudModel.createFriends(id, cloud_data, data['friends'])
-    #     return {"Message": "Shared file to all friends"}, 201

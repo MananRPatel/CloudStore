@@ -1,5 +1,6 @@
 from db import db
 from Models.IdentityModel import IdentityModel
+import os
 
 class CloudModel(db.Model):
     __tablename__ = 'cloud'
@@ -7,7 +8,7 @@ class CloudModel(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     file_id = db.Column(db.String(100), db.ForeignKey('files.id'))
-    owner_id = db.Column(db.Integer,db.ForeignKey('identity.id'),default=None)
+    owner_id = db.Column(db.Integer,db.ForeignKey('identity.id',ondelete="CASCADE"),default=None)
     filename = db.Column(db.String(80))
     roll = db.Column(db.String(10))
 
@@ -41,6 +42,10 @@ class CloudModel(db.Model):
         return cls.query.filter_by(user_id=_id)
 
     @classmethod
+    def find_by_user_id_owner(cls, _id):
+        return cls.query.filter_by(user_id=_id,roll="Owner").first()
+
+    @classmethod
     def find_by_fileName(cls, name):
         return cls.query.filter_by(filename=name).first()
     
@@ -51,19 +56,20 @@ class CloudModel(db.Model):
     
     @classmethod
     def find_friend(cls, owner_id_,fileName,userID):
-        return cls.query.filter_by(filename=fileName,user_id=userID,owner_id=IdentityModel(owner_id_,fileName).id).first()
+        return cls.query.filter_by(filename=fileName,user_id=userID,owner_id=IdentityModel.get_id(owner_id_,fileName).id).first()
     
 
     @classmethod
     def createFriends(cls, owner_id, cloud_data, friends):
+        ownership =  IdentityModel.get_id(owner_id, cloud_data.filename).id
         for i in friends:
             CloudModel(i, cloud_data.file_id, cloud_data.filename, "friends",
-                       IdentityModel(owner_id, cloud_data.filename).id).save_to_db()
+                      ownership).save_to_db()
 
     @classmethod
     def removeFriends(cls, owner_id_, cloud_data, friends_ids):
         for i in friends_ids:
-            cls.query.filter_by(filename=cloud_data.filename,user_id=i,owner_id= IdentityModel(owner_id_,cloud_data.filename).id).delete()
+            cls.query.filter_by(filename=cloud_data.filename,user_id=i,owner_id= IdentityModel.get_id(owner_id_,cloud_data.filename).id).delete()
             db.session.commit()
 
     @classmethod
@@ -72,7 +78,7 @@ class CloudModel(db.Model):
 
        owner_data = cls.find_owner(owner_id_,cloud_data.filename)
 
-       identityOwnerData = IdentityModel(owner_id_,cloud_data.filename)
+       identityOwnerData = IdentityModel.get_id(owner_id_,cloud_data.filename)
 
        friend_data = cls.find_friend(owner_id_,cloud_data.filename,friends_id)
 
@@ -83,9 +89,24 @@ class CloudModel(db.Model):
        friend_data.roll="Owner"
        db.session.commit()
 
+    @classmethod
+    def deleteFile(cls,id_,filename_):
+        print(f"\n\n\n\n\n{id_}\n\n\n\n\n")
+        cloudData = cls.find_by_user_id_owner(id_)
 
+        if cloudData is None:return False
+
+        realFileName = cloudData.file_id
+        print("\n\n\n\n\n")
+        print(realFileName,cloudData.file_id,cloudData.user_id,cloudData.roll,sep="                 ") 
+        print("\n\n\n\n\n\n")
+       
+        IdentityModel.get_id(id_,filename_).delete_from_db()
+        cloudData.delete_from_db()
+        os.remove(f"DataBlock\\{realFileName}")
+        return True
     
     @classmethod
     def find_all_users(cls,id,file_name):
 
-        return cls.query.filter_by(filename=file_name,owner_id=IdentityModel(id,file_name).id).all()
+        return cls.query.filter_by(filename=file_name,owner_id=IdentityModel.get_id(id,file_name).id).all()
