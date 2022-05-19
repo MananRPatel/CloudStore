@@ -43,7 +43,7 @@ class User_Register(Resource):
             {
                 'public_id': user.id,
                 'exp': datetime.datetime.now() + datetime.timedelta(days=15)
-            }, os.getenv('SECRET'))
+            }, os.getenv('SECRET'),algorithm="HS256")
 
         res = make_response({"token": token})
         res.status_code = 201
@@ -82,7 +82,7 @@ class User_Login(Resource):
                     'public_id': user.id,
                     'exp':
                     datetime.datetime.now() + datetime.timedelta(days=15)
-                }, os.getenv('SECRET'))
+                }, os.getenv('SECRET'),algorithm="HS256")
 
             res = make_response({"token": token})
             res.status_code = 201

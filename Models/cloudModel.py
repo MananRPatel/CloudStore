@@ -98,9 +98,13 @@ class CloudModel(db.Model):
     #for retrieve single user
     @classmethod
     def find_friend(cls, owner_id_,fileName,userID):
-        return cls.query.filter_by(filename=fileName,user_id=userID,owner_id=IdentityModel.get_id(owner_id_,fileName).id).first()
+        realOwner = IdentityModel.get_id(owner_id_,fileName)
+        if realOwner == None: return None
+        return cls.query.filter_by(filename=fileName,user_id=userID,owner_id=realOwner.id).first()
     
     #for all friends
     @classmethod
     def find_all_users(cls,id,file_name):
-        return cls.query.filter_by(filename=file_name,owner_id=IdentityModel.get_id(id,file_name).id).all()
+        realOwner = IdentityModel.get_id(id,file_name)
+        if realOwner == None: return None
+        return cls.query.filter_by(filename=file_name,owner_id=realOwner.id)

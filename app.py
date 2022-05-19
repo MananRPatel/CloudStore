@@ -31,9 +31,9 @@ def root():
 
 api.add_resource(User_Register,'/register')
 api.add_resource(User_Login,'/login')
-api.add_resource(Cloud_myDrive,'/cloud/my-drive/<string:info>')
-api.add_resource(CloudPermission,'/cloud/drive-permit/<string:id>')
-api.add_resource(CloudShare,'/cloud/drive-share/<string:id>/<string:filename>')
+api.add_resource(Cloud_myDrive,'/cloud/my-drive/')
+api.add_resource(CloudPermission,'/cloud/drive-permit/')
+api.add_resource(CloudShare,'/cloud/drive-share/<string:filename>/')
 
 @app.errorhandler(404)
 def not_found(e):
