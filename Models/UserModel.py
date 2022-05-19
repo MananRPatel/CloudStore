@@ -1,4 +1,5 @@
 from db import db
+from Models.CloudModel import CloudModel
 
 class UserModel(db.Model):
     __tablename__ = 'users'
@@ -8,7 +9,7 @@ class UserModel(db.Model):
     email = db.Column(db.String(80))
     password = db.Column(db.String(80))
 
-    cloudUser = db.relationship('cloud',backref='cloudier')
+    cloudUser = db.relationship('CloudModel',backref='cloudier')
 
     def __init__(self, username,email, password):
         self.username = username
@@ -33,3 +34,7 @@ class UserModel(db.Model):
     @classmethod
     def find_by_id(cls, _id):
         return cls.query.filter_by(id=_id).first()
+
+    @classmethod
+    def find_by_mail(cls, _mail):
+        return cls.query.filter_by(email=_mail).first()

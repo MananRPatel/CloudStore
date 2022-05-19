@@ -1,15 +1,16 @@
 from db import db
+from Models.CloudModel import CloudModel
 
 class FileModel(db.Model):
     __tablename__ = 'files'
 
-    id = db.Column(db.Integer, PrimaryKey=True)
+    id = db.Column(db.String(100), primary_key=True)
     filename = db.Column(db.String(80))
     filesize = db.Column(db.Integer)
 
-    files = db.relationship('cloud',backref='docs')
+    files = db.relationship('CloudModel',backref='docs')
 
-    def __init__(self, id,filename,filesize):
+    def __init__(self,id,filename,filesize):
         self.id = id
         self.filename = filename
         self.filesize = filesize

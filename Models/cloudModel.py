@@ -3,11 +3,11 @@ from db import db
 class CloudModel(db.Model):
     __tablename__ = 'cloud'
 
-    id = db.Column(db.Integer, PrimaryKey=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id',nullable=False))
-    file_id = db.Column(db.Integer, db.ForeignKey('files.id',nullable=False))
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    file_id = db.Column(db.String(100), db.ForeignKey('files.id'))
     filename = db.Column(db.String(80))
-    roll = db.Column(db.varchar(10))
+    roll = db.Column(db.String(10))
     
 
     def __init__(self,user_id,file_id,filename,roll):
@@ -19,7 +19,8 @@ class CloudModel(db.Model):
     def json(self):
         return {
             'filename': self.filename,
-            'roll': self.roll
+            'roll': self.roll,
+            'email':self.cloudier.password
         }
 
     def save_to_db(self):
@@ -33,3 +34,5 @@ class CloudModel(db.Model):
     @classmethod
     def find_by_id(cls, _id):
         return cls.query.filter_by(id=_id).first()
+
+    
