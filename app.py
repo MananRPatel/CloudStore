@@ -1,6 +1,7 @@
 from flask import Flask
 from flask_restful import Api
 from Resource.User import User
+from Resource.Cloud import Cloud_myDrive,CloudPermission,CloudShare
 from db import db
 import os
 from dotenv import load_dotenv
@@ -28,7 +29,10 @@ def create_tables():
 def root():
     return {"Welcome":"Welcome to Cloud Storage"}
 
-api.add_resource(User,'/user')
+api.add_resource(User,'/user/<string:id>')
+api.add_resource(Cloud_myDrive,'/cloud/my-drive/<string:info>')
+api.add_resource(CloudPermission,'/cloud/drive-permit/<string:id>')
+api.add_resource(CloudShare,'/cloud/drive-share/<string:id>/<string:filename>')
 
 @app.errorhandler(404)
 def not_found(e):
