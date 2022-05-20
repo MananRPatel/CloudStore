@@ -40,7 +40,7 @@ class Cloud_myDrive(Resource):
         sha256Hashed = hashlib.sha256(readFile).hexdigest()
         openedFile.close()
 
-        if CloudModel.find_by_fileName(fileName):
+        if CloudModel.find_by_fileName_with_ownership(currentUser.id,fileName):
             return {
                 "Error":
                 "Filename already exist please provide other file name to identify the file"
@@ -49,6 +49,7 @@ class Cloud_myDrive(Resource):
         if FileModel.getHash(sha256Hashed):
 
             cloud = CloudModel(currentUser.id, sha256Hashed, fileName, "Owner")
+            IdentityModel(currentUser.id, fileName).save_to_db()
             os.remove(f"Temp\\{currentUser.id}{fileName}")
 
         else:

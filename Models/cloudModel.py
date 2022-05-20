@@ -46,6 +46,14 @@ class CloudModel(db.Model):
         return cls.query.filter_by(filename=name).first()
     
     @classmethod
+    def find_by_fileName_with_ownership(cls,id_, name):
+        return cls.query.filter_by(filename=name,user_id=id_).first()
+    
+    @classmethod
+    def find_by_fileName(cls, name):
+        return cls.query.filter_by(filename=name).first()
+    
+    @classmethod
     def find_owner(cls, userId,fileName):
         return cls.query.filter_by(filename=fileName,user_id=userId,owner_id=None).first()
 
@@ -88,11 +96,12 @@ class CloudModel(db.Model):
 
         if cloudData is None:return False
 
-
         realFileName = cloudData.file_id
         IdentityModel.get_id(id_,filename_).delete_from_db()
         cloudData.delete_from_db()
-        os.remove(f"DataBlock\\{realFileName}")
+
+        if not cls.query.filter_by(file_id=realFileName,roll="Owner").first():
+            os.remove(f"DataBlock\\{realFileName}")
         return True
     
     #for retrieve single user
